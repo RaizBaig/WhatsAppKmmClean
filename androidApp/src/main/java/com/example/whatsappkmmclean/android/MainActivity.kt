@@ -1,25 +1,19 @@
 package com.example.whatsappkmmclean.android
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.whatsappkmmclean.Greeting
-import com.example.whatsappkmmclean.android.presentation.ui.BottomNavigationBar
-import com.example.whatsappkmmclean.android.presentation.ui.HomeScreen
-import com.example.whatsappkmmclean.android.presentation.ui.Screen
-import com.example.whatsappkmmclean.android.presentation.ui.SettingsScreen
-import com.example.whatsappkmmclean.android.presentation.ui.StatusScreen
-import com.example.whatsappkmmclean.android.presentation.ui.UpdatesScreen
+import com.example.whatsappkmmclean.android.presentation.ui.*
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,21 +25,49 @@ class MainActivity : ComponentActivity() {
 }
 
 @Preview
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun MainScreen(navController: NavHostController = rememberNavController()) {
+fun MainScreen() {
+    val screens = listOf(Screen.Chats, Screen.Updates, Screen.Communities, Screen.Calls)
+    val pagerState = rememberPagerState { screens.size }
+    var selectedIndex by remember { mutableStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(pagerState.currentPage) {
+        selectedIndex = pagerState.currentPage
+    }
+
+    val title = when (screens[selectedIndex].route) {
+        Screen.Chats.route -> stringResource(R.string.whatsapp)
+        Screen.Updates.route -> stringResource(R.string.updates)
+        Screen.Communities.route -> stringResource(R.string.communities)
+        Screen.Calls.route -> stringResource(R.string.calls)
+        else -> "App"
+    }
+
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
+        topBar = { TopAppBar(title = { Text(title) }) },
+        bottomBar = {
+            BottomNavigationBar(
+                selectedIndex = selectedIndex,
+                onTabSelected = { index ->
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(index)
+                    }
+                }
+            )
+        }
     ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Home.route,
+        HorizontalPager(
+            state = pagerState,
             modifier = Modifier.padding(paddingValues)
-        ) {
-            composable(Screen.Home.route) { HomeScreen() }
-            composable(Screen.Status.route) { StatusScreen() }
-            composable(Screen.Updates.route) { UpdatesScreen() }
-            composable(Screen.Settings.route) { SettingsScreen() }
+        ) { page ->
+            when (screens[page].route) {
+                Screen.Chats.route -> ChatScreen()
+                Screen.Updates.route -> UpdatesScreen()
+                Screen.Communities.route -> CommunitiesScreen()
+                Screen.Calls.route -> CallsScreen()
+            }
         }
     }
 }
-

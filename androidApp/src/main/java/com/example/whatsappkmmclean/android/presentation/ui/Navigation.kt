@@ -13,27 +13,29 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Text
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun BottomNavigationBar(
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit
+) {
     val items = listOf(
-        Screen.Home,
-        Screen.Status,
+        Screen.Chats,
         Screen.Updates,
-        Screen.Settings
+        Screen.Communities,
+        Screen.Calls
     )
 
     NavigationBar {
-        val currentRoute = navController.currentDestination?.route
-        items.forEach { screen ->
+        items.forEachIndexed { index, screen ->
             NavigationBarItem(
-                selected = currentRoute == screen.route,
-                onClick = { navController.navigate(screen.route) },
+                selected = index == selectedIndex,
+                onClick = { onTabSelected(index) },
                 icon = {
                     Icon(
                         imageVector = when (screen) {
-                            is Screen.Home -> Icons.Default.Home
-                            is Screen.Status -> Icons.Default.Person
+                            is Screen.Chats -> Icons.Default.Home
                             is Screen.Updates -> Icons.Default.Notifications
-                            is Screen.Settings -> Icons.Default.Settings
+                            is Screen.Communities -> Icons.Default.Person
+                            is Screen.Calls -> Icons.Default.Settings
                         },
                         contentDescription = screen.route
                     )
@@ -43,3 +45,4 @@ fun BottomNavigationBar(navController: NavHostController) {
         }
     }
 }
+
